@@ -410,7 +410,7 @@ with col1:
             hovermode='x unified',
             template='plotly_white'
         )
-        st.plotly_chart(fig_revenue, use_container_width=True)
+        st.plotly_chart(fig_revenue, width='stretch')
 
 with col2:
     monthly_aov = get_aov_by_month()
@@ -431,7 +431,7 @@ with col2:
             hovermode='x unified',
             template='plotly_white'
         )
-        st.plotly_chart(fig_aov, use_container_width=True)
+        st.plotly_chart(fig_aov, width='stretch')
 
 st.markdown("---")
 
@@ -488,7 +488,7 @@ fig_funnel.update_layout(
     margin=dict(l=0, r=0, t=50, b=0)
 )
 
-st.plotly_chart(fig_funnel, use_container_width=True)
+st.plotly_chart(fig_funnel, width='stretch')
 
 # Identify biggest friction point
 if len(funnel_values) > 1:
@@ -551,7 +551,7 @@ with col1:
         height=350,
         template='plotly_white'
     )
-    st.plotly_chart(fig_revenue_channel, use_container_width=True)
+    st.plotly_chart(fig_revenue_channel, width='stretch')
 
 with col2:
     # Conversion Efficiency: Scatter Plot
@@ -586,7 +586,7 @@ with col2:
         showlegend=True
     )
 
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    st.plotly_chart(fig_scatter, width='stretch')
 
 st.markdown("---")
 
@@ -661,28 +661,28 @@ with col3:
 
 # Top Products Treemap
 if len(top_products) > 0:
-    fig_treemap = px.treemap(
-        top_products,
-        labels='item_name',
-        parents=[''] * len(top_products),
-        values='purchase_revenue',
-        title="Top 5 Products by Revenue (Treemap)",
-        text='pct_of_total',
-        color='purchase_revenue',
-        color_continuous_scale='Blues'
-    )
+    # Add percentage as a stringified column for display
+    top_products_display = top_products.copy()
+    top_products_display['pct_label'] = top_products_display['pct_of_total'].apply(lambda x: f"{x:.1f}%")
 
-    fig_treemap.update_traces(
-        texttemplate='<b>%{label}</b><br>%{text:.1f}%<br>$%{value:.0f}',
-        textposition='middle center'
-    )
+    fig_treemap = go.Figure(go.Treemap(
+        labels=top_products_display['item_name'],
+        parents=[''] * len(top_products_display),
+        values=top_products_display['purchase_revenue'],
+        marker=dict(colorscale='Blues', cmid=top_products_display['purchase_revenue'].mean()),
+        texttemplate='<b>%{label}</b><br>%{customdata}<br>$%{value:.0f}',
+        textposition='middle center',
+        customdata=top_products_display['pct_label'],
+        hovertemplate='<b>%{label}</b><br>Revenue: $%{value:.0f}<br>% of Total: %{customdata}<extra></extra>'
+    ))
 
     fig_treemap.update_layout(
+        title="Top 5 Products by Revenue (Treemap)",
         height=400,
         template='plotly_white'
     )
 
-    st.plotly_chart(fig_treemap, use_container_width=True)
+    st.plotly_chart(fig_treemap, width='stretch')
 
 # Device Distribution: Side-by-side Donuts
 col1, col2 = st.columns(2)
@@ -701,7 +701,7 @@ with col1:
             height=400,
             template='plotly_white'
         )
-        st.plotly_chart(fig_traffic, use_container_width=True)
+        st.plotly_chart(fig_traffic, width='stretch')
 
 with col2:
     if len(device_data['device']) > 0:
@@ -717,7 +717,7 @@ with col2:
             height=400,
             template='plotly_white'
         )
-        st.plotly_chart(fig_purchases, use_container_width=True)
+        st.plotly_chart(fig_purchases, width='stretch')
 
 st.markdown("---")
 
