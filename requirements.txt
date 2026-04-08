@@ -1,6 +1,7 @@
-streamlit
-google-cloud-bigquery
-google-auth
-pandas
-plotly
-db-dtypes
+streamlit==1.32.0
+pandas==2.1.1
+numpy==1.24.3
+plotly==5.17.0
+google-cloud-bigquery==3.13.0
+google-cloud-bigquery-storage==2.25.0
+pyarrow==13.0.0
