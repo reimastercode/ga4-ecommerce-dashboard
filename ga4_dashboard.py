@@ -294,8 +294,9 @@ def get_revenue_by_month():
     monthly_revenue = filtered_df[filtered_df['event_name'] == 'purchase'].copy()
     monthly_revenue['month'] = monthly_revenue['event_date'].dt.strftime('%B')
     monthly_revenue['month_num'] = monthly_revenue['event_date'].dt.month
-    monthly_revenue = monthly_revenue.groupby(['month_num', 'month'])['purchase_revenue'].sum().sort_values('month_num')
-    return monthly_revenue.reset_index(drop=True)
+    monthly_revenue = monthly_revenue.groupby(['month_num', 'month'])['purchase_revenue'].sum().reset_index()
+    monthly_revenue = monthly_revenue.sort_values('month_num')
+    return monthly_revenue
 
 def get_aov_by_month():
     """AOV by Month"""
@@ -317,12 +318,21 @@ def get_device_conversion_gap():
     total_sessions = sessions_by_device.sum()
     total_purchases = purchases_by_device.sum()
 
+    if total_sessions == 0 or total_purchases == 0:
+        return {
+            'device': [],
+            'session_pct': [],
+            'purchase_pct': [],
+            'count_sessions': [],
+            'count_purchases': []
+        }
+
     device_dist = {
         'device': sessions_by_device.index.tolist(),
         'session_pct': (sessions_by_device / total_sessions * 100).tolist(),
-        'purchase_pct': (purchases_by_device / total_purchases * 100).tolist(),
+        'purchase_pct': (purchases_by_device[sessions_by_device.index] / total_purchases * 100).tolist() if len(sessions_by_device) > 0 else [],
         'count_sessions': sessions_by_device.tolist(),
-        'count_purchases': purchases_by_device.tolist()
+        'count_purchases': [purchases_by_device.get(dev, 0) for dev in sessions_by_device.index]
     }
     return device_dist
 
@@ -606,13 +616,26 @@ with col1:
 # Device metrics
 device_data = get_device_conversion_gap()
 
-if 'desktop' in device_data['device']:
-    desktop_idx = device_data['device'].index('desktop')
-    desktop_sessions_pct = device_data['session_pct'][desktop_idx]
-    desktop_purchase_pct = device_data['purchase_pct'][desktop_idx]
-    desktop_cvr = (device_data['count_purchases'][desktop_idx] / device_data['count_sessions'][desktop_idx] * 100)
-else:
-    desktop_cvr = 0
+# Safe access to device data
+desktop_cvr = 0
+mobile_cvr = 0
+gap = 0
+color_gap = "🟢"
+
+if len(device_data['device']) > 0:
+    device_dict = dict(zip(device_data['device'],
+                          zip(device_data['count_sessions'],
+                              device_data['count_purchases'])))
+
+    if 'desktop' in device_dict:
+        desktop_sessions, desktop_purchases = device_dict['desktop']
+        if desktop_sessions > 0:
+            desktop_cvr = (desktop_purchases / desktop_sessions * 100)
+
+    if 'mobile' in device_dict:
+        mobile_sessions, mobile_purchases = device_dict['mobile']
+        if mobile_sessions > 0:
+            mobile_cvr = (mobile_purchases / mobile_sessions * 100)
 
 with col2:
     st.metric(
@@ -621,15 +644,11 @@ with col2:
         delta="✓ Baseline"
     )
 
-if 'mobile' in device_data['device']:
-    mobile_idx = device_data['device'].index('mobile')
-    mobile_sessions_pct = device_data['session_pct'][mobile_idx]
-    mobile_purchase_pct = device_data['purchase_pct'][mobile_idx]
-    mobile_cvr = (device_data['count_purchases'][mobile_idx] / device_data['count_sessions'][mobile_idx] * 100)
-    gap = mobile_sessions_pct - mobile_purchase_pct
-    color_gap = "🔴" if gap > 30 else "🟡" if gap > 20 else "🟢"
+# Calculate mobile-desktop gap
+if desktop_cvr > 0 and mobile_cvr > 0:
+    gap = desktop_cvr - mobile_cvr
+    color_gap = "🔴" if gap > 2 else "🟡" if gap > 1 else "🟢"
 else:
-    mobile_cvr = 0
     gap = 0
     color_gap = "🟢"
 
