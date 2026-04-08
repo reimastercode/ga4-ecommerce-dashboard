@@ -79,7 +79,7 @@ def generate_mock_data():
 
     # Create event sequences
     for i in range(n_events):
-        date = np.random.choice(date_range)
+        date = pd.Timestamp(np.random.choice(date_range))
         month = date.month
 
         # Season adjustments
