@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
-import numpy as np
 
 # Configure Streamlit page
 st.set_page_config(
@@ -46,419 +45,377 @@ st.markdown("""
         border-radius: 5px;
         margin: 10px 0;
     }
+    .warning-box {
+        background-color: #fff3e0;
+        border-left: 4px solid #f57c00;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Load data
-@st.cache_data
-def load_data():
-    df = pd.read_csv('dashboard_kpi_values.csv')
-    return df
+# ============================================================================
+# KPI DATA - All values from kpi_values_tables.md
+# ============================================================================
 
-df = load_data()
+# Overview metrics
+overview_data = {
+    'total_revenue': 362165,
+    'total_orders': 4452,
+    'unique_buyers': 4419,
+    'total_sessions': 267116,
+}
 
-# Title and overview
+# Revenue by month
+revenue_by_month = {
+    'November': {'revenue': 144260, 'orders': 1259, 'aov': 114.58},
+    'December': {'revenue': 160555, 'orders': 2311, 'aov': 69.47},
+    'January': {'revenue': 57350, 'orders': 895, 'aov': 64.08},
+}
+
+# Full period AOV
+full_period_aov = 81.35
+
+# Funnel stages
+funnel_data = {
+    'Session Start': 267116,
+    'View Item': 61252,
+    'Add to Cart': 12545,
+    'Begin Checkout': 9715,
+    'Purchase': 4419,
+}
+
+# Checkout abandonment
+checkout_abandonment_rate = 54.51
+checkout_users = 9715
+abandoned_users = 5296
+
+# Traffic by channel
+traffic_by_channel = {
+    'Organic': {'revenue': 104007, 'pct': 28.7, 'sessions': 111346, 'buyers': 1323, 'cvr': 1.19},
+    'Referral': {'revenue': 83521, 'pct': 23.1, 'sessions': 54380, 'buyers': 1026, 'cvr': 1.89},
+    'CPC': {'revenue': 9056, 'pct': 2.5, 'sessions': 15450, 'buyers': 152, 'cvr': 0.98},
+}
+
+# Product concentration
+product_data = [
+    {'name': 'Google Zip Hoodie F/C', 'revenue': 13788, 'units': 273, 'pct': 3.8},
+    {'name': 'Google Crewneck Sweatshirt N', 'revenue': 10714, 'units': 236, 'pct': 3.0},
+    {'name': "Google Men's Tech Fleece Grey", 'revenue': 9964, 'units': 134, 'pct': 2.7},
+    {'name': 'Google Badge Heavyweight Pullover', 'revenue': 9702, 'units': 201, 'pct': 2.7},
+    {'name': 'Super G Unisex Joggers', 'revenue': 9548, 'units': 308, 'pct': 2.6},
+]
+top5_concentration = 14.8
+
+# Device data
+device_data = {
+    'Desktop': {'sessions': 157079, 'session_pct': 57.9, 'buyers': 2541, 'purchase_pct': 56.6, 'gap': -1.3},
+    'Mobile': {'sessions': 107981, 'session_pct': 39.8, 'buyers': 1851, 'purchase_pct': 41.2, 'gap': 1.4},
+    'Tablet': {'sessions': 6175, 'session_pct': 2.3, 'buyers': 97, 'purchase_pct': 2.2, 'gap': -0.1},
+}
+
+# ============================================================================
+# DASHBOARD TITLE & OVERVIEW
+# ============================================================================
+
 st.title("📊 GA4 E-Commerce Dashboard")
-st.markdown("**CMO View** | Google Merchandise Store | Nov 2020 – Jan 2021 (92 days)")
+st.markdown("**CMO Data View** | Google Merchandise Store | Nov 2020 – Jan 2021 (92 days)")
 st.markdown("---")
 
 # Critical alerts
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown('<div class="alert-box"><strong>⚠️ CRITICAL:</strong> 77% of 267,116 sessions end without viewing a product — homepage navigation failing. Fix before scaling.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="alert-box"><strong>🚨 CRITICAL:</strong> Only 22.9% of 267K sessions view a product — 205,864 users lost before product page.</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<div class="success-box"><strong>✅ STRENGTH:</strong> Mobile converts at 41.2% of purchases vs 39.8% traffic share — unusually strong mobile parity.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="alert-box"><strong>⚠️ ACTION NEEDED:</strong> 54.5% checkout abandonment = $43K revenue recovery potential.</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
-# SECTION 1: OVERVIEW & REVENUE
-st.markdown('<div class="section-header">1️⃣ OVERVIEW & KEY METRICS</div>', unsafe_allow_html=True)
+# ============================================================================
+# SECTION 1: REVENUE & TRANSACTION PERFORMANCE
+# ============================================================================
 
-overview_data = df[df['category'] == 'OVERVIEW']
-col1, col2, col3, col4 = st.columns(4)
+st.markdown('<div class="section-header">💰 Revenue & Transaction Performance</div>', unsafe_allow_html=True)
 
-with col1:
-    total_revenue = overview_data[overview_data['metric_name'] == 'Total Purchase Revenue']['value'].values[0]
-    st.metric("Total Revenue", f"${total_revenue:,.0f}", "Nov - Jan Period")
+# Overview KPIs
+kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
 
-with col2:
-    total_orders = overview_data[overview_data['metric_name'] == 'Total Orders']['value'].values[0]
-    st.metric("Total Orders", f"{int(total_orders):,}", "4,419 unique buyers")
+with kpi_col1:
+    st.metric("Total Revenue", f"${overview_data['total_revenue']:,.0f}", "Full Period")
 
-with col3:
-    unique_buyers = overview_data[overview_data['metric_name'] == 'Unique Buyers']['value'].values[0]
-    st.metric("Unique Buyers", f"{int(unique_buyers):,}", "Full period")
+with kpi_col2:
+    st.metric("Total Orders", f"{overview_data['total_orders']:,}", "+83% Dec vs Nov")
 
-with col4:
-    total_sessions = overview_data[overview_data['metric_name'] == 'Total Sessions']['value'].values[0]
-    st.metric("Total Sessions", f"{int(total_sessions):,}", "Full funnel baseline")
+with kpi_col3:
+    st.metric("Unique Buyers", f"{overview_data['unique_buyers']:,}", "33 repeats")
 
-st.markdown("---")
+with kpi_col4:
+    st.metric("Avg Order Value", f"${full_period_aov:.2f}", "Period Avg")
 
-# SECTION 2: REVENUE & TRANSACTION PERFORMANCE (KPIs 1 & 2)
-st.markdown('<div class="section-header">💰 REVENUE & TRANSACTION PERFORMANCE (KPIs 1 & 2)</div>', unsafe_allow_html=True)
+# Revenue and AOV visualizations
+chart_col1, chart_col2 = st.columns(2)
 
-revenue_data = df[df['category'] == 'REVENUE']
+# Chart 1: Revenue by Month
+with chart_col1:
+    months = list(revenue_by_month.keys())
+    revenues = [revenue_by_month[m]['revenue'] for m in months]
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    nov_revenue = revenue_data[revenue_data['metric_name'] == 'Total Purchase Revenue'].iloc[1]['value']
-    nov_aov = revenue_data[revenue_data['metric_name'] == 'Average Order Value'].iloc[0]['value']
-    st.metric("November Revenue", f"${nov_revenue:,.0f}", f"AOV: ${nov_aov:.2f} ⭐ Highest")
-
-with col2:
-    dec_revenue = revenue_data[revenue_data['metric_name'] == 'Total Purchase Revenue'].iloc[2]['value']
-    dec_aov = revenue_data[revenue_data['metric_name'] == 'Average Order Value'].iloc[1]['value']
-    st.metric("December Revenue", f"${dec_revenue:,.0f}", f"AOV: ${dec_aov:.2f} (-39%)")
-
-with col3:
-    jan_revenue = revenue_data[revenue_data['metric_name'] == 'Total Purchase Revenue'].iloc[3]['value']
-    jan_aov = revenue_data[revenue_data['metric_name'] == 'Average Order Value'].iloc[2]['value']
-    st.metric("January Revenue", f"${jan_revenue:,.0f}", f"AOV: ${jan_aov:.2f} Baseline")
-
-with col4:
-    full_aov = revenue_data[revenue_data['metric_name'] == 'Average Order Value'].iloc[3]['value']
-    st.metric("Full Period AOV", f"${full_aov:.2f}", "Above $80 target ✓")
-
-# Revenue charts
-col1, col2 = st.columns(2)
-
-with col1:
-    # Revenue by month bar chart
-    months = ['November', 'December', 'January']
-    revenues = [nov_revenue, dec_revenue, jan_revenue]
-
-    fig_revenue = go.Figure(data=[
-        go.Bar(x=months, y=revenues, marker_color=['#1f77b4', '#d32f2f', '#2ca02c'])
-    ])
+    fig_revenue = go.Figure()
+    fig_revenue.add_trace(go.Bar(
+        x=months,
+        y=revenues,
+        marker=dict(color=['#1f77b4', '#d32f2f', '#f57c00']),
+        text=[f'${r:,.0f}' for r in revenues],
+        textposition='outside',
+    ))
     fig_revenue.update_layout(
         title="Revenue by Month",
-        xaxis_title="Month",
         yaxis_title="Revenue ($)",
+        xaxis_title="Month",
         hovermode='x unified',
-        height=400,
-        showlegend=False
+        showlegend=False,
+        height=400
     )
     st.plotly_chart(fig_revenue, use_container_width=True)
 
-with col2:
-    # AOV trend line chart
-    aov_values = [nov_aov, dec_aov, jan_aov]
+# Chart 2: AOV Trend
+with chart_col2:
+    months = list(revenue_by_month.keys())
+    aovs = [revenue_by_month[m]['aov'] for m in months]
 
-    fig_aov = go.Figure(data=[
-        go.Scatter(x=months, y=aov_values, mode='lines+markers',
-                   line=dict(color='#1f77b4', width=3),
-                   marker=dict(size=10),
-                   fill='tozeroy')
-    ])
+    fig_aov = go.Figure()
+    fig_aov.add_trace(go.Scatter(
+        x=months,
+        y=aovs,
+        mode='lines+markers',
+        line=dict(color='#2ca02c', width=3),
+        marker=dict(size=10),
+        text=[f'${a:.2f}' for a in aovs],
+        textposition='top center',
+    ))
     fig_aov.update_layout(
-        title="AOV Trend by Month",
-        xaxis_title="Month",
+        title="Average Order Value Trend",
         yaxis_title="AOV ($)",
+        xaxis_title="Month",
         hovermode='x unified',
-        height=400,
-        showlegend=False
+        showlegend=False,
+        height=400
     )
     st.plotly_chart(fig_aov, use_container_width=True)
 
-st.markdown("**Interpretation:** Dec AOV dropped 39% vs Nov ($115 → $69) despite peak volume. Holiday volume  came at cost of basket size. Introduce bundle promos and min-basket free shipping in Nov to protect Dec AOV.")
+st.markdown("""
+**Insight:** December brought peak volume (+83% orders vs November) but at the cost of 39% lower AOV. November customers spend 65% more per order.
+**Action:** Bundle promotions in early November to protect December AOV from seasonal deflation.
+""")
 
 st.markdown("---")
 
-# SECTION 3: FUNNEL & CONVERSION EFFICIENCY (KPIs 3 & 4)
-st.markdown('<div class="section-header">🔄 FUNNEL & CONVERSION EFFICIENCY (KPIs 3 & 4)</div>', unsafe_allow_html=True)
+# ============================================================================
+# SECTION 2: FUNNEL & CONVERSION EFFICIENCY
+# ============================================================================
 
-funnel_data = df[df['category'] == 'FUNNEL']
+st.markdown('<div class="section-header">🔄 Funnel & Conversion Efficiency</div>', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    cvr = funnel_data[funnel_data['metric_name'] == 'End-to-End Conversion Rate']['value'].values[0]
-    st.metric("End-to-End CVR", f"{cvr:.2f}%", "Within benchmark (1-3%) ✓")
+funnel_col1, funnel_col2, funnel_col3 = st.columns(3)
 
-with col2:
-    checkout_abandon = funnel_data[funnel_data['metric_name'] == 'Checkout Abandonment Rate']['value'].values[0]
-    status_color = "🔴" if checkout_abandon > 50 else "🟢"
-    st.metric("Checkout Abandonment", f"{checkout_abandon:.2f}%", f"{status_color} Above 50% threshold")
+with funnel_col1:
+    st.metric("End-to-End CVR", "1.65%", "Within benchmark")
 
-with col3:
-    total_sessions_f = funnel_data[funnel_data['metric_name'] == 'Total Sessions']['value'].values[0]
-    st.metric("Total Sessions", f"{int(total_sessions_f):,}", "Funnel baseline")
+with funnel_col2:
+    st.metric("Checkout Abandonment", f"{checkout_abandonment_rate:.1f}%", "Above 50% threshold")
+
+with funnel_col3:
+    st.metric("Revenue at Risk", "$43K", "10% recovery")
 
 # Funnel visualization
-col1, col2 = st.columns([2, 1])
+stages = list(funnel_data.keys())
+users = list(funnel_data.values())
+
+fig_funnel = go.Figure(go.Funnel(
+    x=users,
+    y=stages,
+    marker=dict(color=['#1f77b4', '#d32f2f', '#f57c00', '#2ca02c', '#388e3c']),
+    text=[f'{u:,}' for u in users],
+    textposition='inside',
+))
+fig_funnel.update_layout(
+    title="User Funnel: Session Start → Purchase",
+    height=400
+)
+st.plotly_chart(fig_funnel, use_container_width=True)
+
+# Stage-by-stage analysis
+st.subheader("Stage-by-Stage Conversion Rates")
+funnel_df = pd.DataFrame({
+    'Stage': ['Session → View Item', 'View Item → Add to Cart', 'Add to Cart → Checkout', 'Checkout → Purchase'],
+    'Conversion Rate': ['22.9%', '20.5%', '77.4%', '45.5%'],
+    'Status': ['🚨 Critical', '⚠️ Watch', '✓ Strong', '⚠️ Below Target'],
+})
+st.dataframe(funnel_df, use_container_width=True, hide_index=True)
+
+st.markdown("""
+**Critical Finding:** 205,864 visitors never see a product (77% drop-off at View Item stage). This is the largest absolute loss point.
+**Action:** Route to UX/Product team — audit homepage navigation and landing page routing immediately.
+""")
+
+st.markdown("---")
+
+# ============================================================================
+# SECTION 3: TRAFFIC SOURCE QUALITY
+# ============================================================================
+
+st.markdown('<div class="section-header">🚀 Traffic Source Quality</div>', unsafe_allow_html=True)
+
+# Revenue by channel
+channels = list(traffic_by_channel.keys())
+revenues_channel = [traffic_by_channel[c]['revenue'] for c in channels]
+colors_map = {'Organic': '#2ca02c', 'Referral': '#1f77b4', 'CPC': '#d32f2f'}
+colors = [colors_map[c] for c in channels]
+
+fig_revenue_channel = go.Figure(go.Bar(
+    y=channels,
+    x=revenues_channel,
+    orientation='h',
+    marker=dict(color=colors),
+    text=[f'${r:,.0f}<br>({traffic_by_channel[c]["pct"]:.1f}%)' for c, r in zip(channels, revenues_channel)],
+    textposition='outside',
+))
+fig_revenue_channel.update_layout(
+    title="Revenue by Traffic Channel",
+    xaxis_title="Revenue ($)",
+    hovermode='y unified',
+    showlegend=False,
+    height=300
+)
+st.plotly_chart(fig_revenue_channel, use_container_width=True)
+
+# CVR and volume by channel
+st.subheader("Channel Efficiency Matrix")
+channel_df = pd.DataFrame({
+    'Channel': channels,
+    'Sessions': [f"{traffic_by_channel[c]['sessions']:,}" for c in channels],
+    'Buyers': [f"{traffic_by_channel[c]['buyers']:,}" for c in channels],
+    'CVR': [f"{traffic_by_channel[c]['cvr']:.2f}%" for c in channels],
+    'Revenue': [f"${traffic_by_channel[c]['revenue']:,.0f}" for c in channels],
+    'Status': ['✓ Best', '✓ Strong', '🚨 Alert'],
+})
+st.dataframe(channel_df, use_container_width=True, hide_index=True)
+
+st.markdown("""
+**Key Insight:**
+- Organic earns **11.5× more** than CPC despite similar session investment
+- Referral converts at **1.89% CVR** (best real channel) vs CPC at 0.98%
+
+**Action:** Reallocate CPC budget to referral partner development. Each 1% CVR improvement at current volume = ~$11,441 additional revenue.
+""")
+
+st.markdown("---")
+
+# ============================================================================
+# SECTION 4: PRODUCT & AUDIENCE INSIGHTS
+# ============================================================================
+
+st.markdown('<div class="section-header">🎁 Product & Audience Insights</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns([1, 1])
 
 with col1:
-    session_start = funnel_data[funnel_data['metric_name'] == 'Funnel Stage - Session Start']['value'].values[0]
-    view_item = funnel_data[funnel_data['metric_name'] == 'Funnel Stage - View Item']['value'].values[0]
-    add_to_cart = funnel_data[funnel_data['metric_name'] == 'Funnel Stage - Add to Cart']['value'].values[0]
-    begin_checkout = funnel_data[funnel_data['metric_name'] == 'Funnel Stage - Begin Checkout']['value'].values[0]
-    purchase = funnel_data[funnel_data['metric_name'] == 'Funnel Stage - Purchase']['value'].values[0]
+    st.metric("Top 5 SKU Concentration", f"{top5_concentration:.1f}%", "Well below 60% threshold")
+    st.markdown("""**Status:** Healthy portfolio — no single product dependency risk.
+Top 5 products = only 14.8% of revenue. Diversified portfolio is resilient.""")
 
-    funnel_stages = ['Session Start', 'View Item', 'Add to Cart', 'Begin Checkout', 'Purchase']
-    funnel_values = [session_start, view_item, add_to_cart, begin_checkout, purchase]
-    funnel_colors = ['#2ca02c', '#d32f2f', '#ff7f0e', '#ff7f0e', '#1f77b4']
+with col2:
+    st.metric("Mobile Conversion Gap", "+1.4 ppts", "Mobile Over-indexes")
+    st.markdown("""**Status:** Mobile strength — converts at higher rate than traffic share.
+Mobile is a competitive advantage, not a problem.""")
 
-    fig_funnel = go.Figure(go.Funnel(
-        y=funnel_stages,
-        x=funnel_values,
-        marker=dict(color=funnel_colors)
-    ))
-    fig_funnel.update_layout(
-        title="Funnel Breakdown: Session Start to Purchase",
-        height=400,
-        font=dict(size=12)
-    )
-    st.plotly_chart(fig_funnel, use_container_width=True)
+# Top 5 products
+st.subheader("Top 5 Products by Revenue")
 
-with col1:
-    # Stage details table
-    stage_cvr_session_view = funnel_data[funnel_data['metric_name'] == 'Stage CVR - Session to View Item']['value'].values[0]
-    stage_cvr_view_cart = funnel_data[funnel_data['metric_name'] == 'Stage CVR - View Item to Add to Cart']['value'].values[0]
-    stage_cvr_cart_checkout = funnel_data[funnel_data['metric_name'] == 'Stage CVR - Add to Cart to Checkout']['value'].values[0]
-    stage_cvr_checkout_purchase = funnel_data[funnel_data['metric_name'] == 'Stage CVR - Checkout to Purchase']['value'].values[0]
+fig_products = go.Figure(go.Bar(
+    y=[p['name'] for p in product_data],
+    x=[p['revenue'] for p in product_data],
+    orientation='h',
+    marker=dict(color='#9467bd'),
+    text=[f"${p['revenue']:,.0f}<br>{p['units']} units" for p in product_data],
+    textposition='outside',
+))
+fig_products.update_layout(
+    title="Top 5 Products by Revenue",
+    xaxis_title="Revenue ($)",
+    showlegend=False,
+    height=300
+)
+st.plotly_chart(fig_products, use_container_width=True)
 
-    stage_data = {
-        'Stage Transition': [
-            'Session → View Item',
-            'View Item → Add to Cart',
-            'Add to Cart → Checkout',
-            'Checkout → Purchase'
-        ],
-        'Users In → Out': [
-            f'{int(session_start):,} → {int(view_item):,}',
-            f'{int(view_item):,} → {int(add_to_cart):,}',
-            f'{int(add_to_cart):,} → {int(begin_checkout):,}',
-            f'{int(begin_checkout):,} → {int(purchase):,}'
-        ],
-        'CVR': [
-            f'{stage_cvr_session_view:.1f}% 🔴',
-            f'{stage_cvr_view_cart:.1f}% ⚠️',
-            f'{stage_cvr_cart_checkout:.1f}% ✅',
-            f'{stage_cvr_checkout_purchase:.1f}% ⚠️'
-        ]
+# Device performance
+st.subheader("Device Performance Analysis")
+
+device_df_display = pd.DataFrame([
+    {
+        'Device': device,
+        'Sessions': f"{device_data[device]['sessions']:,}",
+        'Session %': f"{device_data[device]['session_pct']:.1f}%",
+        'Buyers': f"{device_data[device]['buyers']:,}",
+        'Purchase %': f"{device_data[device]['purchase_pct']:.1f}%",
+        'Gap (ppts)': f"{device_data[device]['gap']:+.1f}",
     }
-    st.dataframe(pd.DataFrame(stage_data), use_container_width=True, hide_index=True)
+    for device in device_data.keys()
+])
+st.dataframe(device_df_display, use_container_width=True, hide_index=True)
 
 st.markdown("""
-**Key Findings:**
-- **CRITICAL:** Session → View Item conversion is only 22.9% — 77.1% of visitors never see a product. This is the largest leak.
-- ✅ **STRONG:** 77.4% of users who add to cart proceed to checkout — excellent intent signal
-- ⚠️ **WATCH:** 45.5% checkout completion rate — 5,296 high-intent users lost at final stage
+**Device Insight:** Mobile (+1.4 ppts) and Desktop (-1.3 ppts) conversion gaps are negligible.
+**Recommendation:** Current UX satisfies both desktop and mobile users — maintain without major changes.
 """)
 
 st.markdown("---")
 
-# SECTION 4: TRAFFIC SOURCE QUALITY (KPIs 5 & 6)
-st.markdown('<div class="section-header">🚀 TRAFFIC SOURCE QUALITY (KPIs 5 & 6)</div>', unsafe_allow_html=True)
+# ============================================================================
+# ACTION SUMMARY
+# ============================================================================
 
-traffic_data = df[df['category'] == 'TRAFFIC']
+st.markdown('<div class="section-header">📋 Recommended Actions (Prioritized)</div>', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    organic_revenue = traffic_data[traffic_data['metric_name'] == 'Revenue by Traffic Channel'].iloc[0]['value']
-    organic_cvr = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[0]['value']
-    st.metric("Organic Search", f"${organic_revenue:,.0f}", f"CVR: {organic_cvr:.2f}% ⭐ Top Channel")
+actions_data = [
+    {
+        'Priority': '🚨 CRITICAL',
+        'Action': 'Fix Homepage Navigation',
+        'Impact': '205,864 sessions never view product',
+        'Owner': 'UX/Product',
+    },
+    {
+        'Priority': '🚨 CRITICAL',
+        'Action': 'Audit Checkout Flow',
+        'Impact': '~$43K revenue recovery (10% of abandoned)',
+        'Owner': 'Dev/UX',
+    },
+    {
+        'Priority': '🔴 HIGH',
+        'Action': 'Reallocate CPC Budget',
+        'Impact': 'Organic 11.5× better than CPC',
+        'Owner': 'Performance Marketing',
+    },
+    {
+        'Priority': '🟡 MONITOR',
+        'Action': 'Protect December AOV',
+        'Impact': '$45 drop vs November (39% decline)',
+        'Owner': 'Merchandising',
+    },
+]
 
-with col2:
-    referral_revenue = traffic_data[traffic_data['metric_name'] == 'Revenue by Traffic Channel'].iloc[2]['value']
-    referral_cvr = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[2]['value']
-    st.metric("Referral", f"${referral_revenue:,.0f}", f"CVR: {referral_cvr:.2f}% ✅ Best Quality")
-
-with col3:
-    cpc_revenue = traffic_data[traffic_data['metric_name'] == 'Revenue by Traffic Channel'].iloc[4]['value']
-    cpc_cvr = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[4]['value']
-    st.metric("Paid Search (CPC)", f"${cpc_revenue:,.0f}", f"CVR: {cpc_cvr:.2f}% 🔴 Reallocate")
-
-# Channel charts
-col1, col2 = st.columns(2)
-
-with col1:
-    channels = ['Organic', 'Referral', 'CPC']
-    revenues = [organic_revenue, referral_revenue, cpc_revenue]
-
-    fig_channel = go.Figure(data=[
-        go.Bar(y=channels, x=revenues, orientation='h', marker_color=['#2ca02c', '#1f77b4', '#d32f2f'])
-    ])
-    fig_channel.update_layout(
-        title="Revenue by Traffic Channel",
-        xaxis_title="Revenue ($)",
-        yaxis_title="Channel",
-        height=400,
-        showlegend=False
-    )
-    st.plotly_chart(fig_channel, use_container_width=True)
-
-with col2:
-    organic_sessions = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[1]['value']
-    referral_sessions = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[3]['value']
-    cpc_sessions = traffic_data[traffic_data['metric_name'] == 'Conversion Rate by Channel'].iloc[5]['value']
-
-    fig_scatter = go.Figure()
-    fig_scatter.add_trace(go.Scatter(
-        x=[organic_sessions], y=[organic_cvr], mode='markers',
-        marker=dict(size=15, color='#2ca02c'),
-        text=['Organic'], textposition='top center',
-        name='Organic'
-    ))
-    fig_scatter.add_trace(go.Scatter(
-        x=[referral_sessions], y=[referral_cvr], mode='markers',
-        marker=dict(size=12, color='#1f77b4'),
-        text=['Referral'], textposition='top center',
-        name='Referral'
-    ))
-    fig_scatter.add_trace(go.Scatter(
-        x=[cpc_sessions], y=[cpc_cvr], mode='markers',
-        marker=dict(size=10, color='#d32f2f'),
-        text=['CPC'], textposition='top center',
-        name='CPC'
-    ))
-
-    fig_scatter.update_layout(
-        title="Channel Efficiency: Volume vs CVR",
-        xaxis_title="Session Volume",
-        yaxis_title="Conversion Rate (%)",
-        height=400,
-        hovermode='closest'
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
-
-st.markdown("""
-**Key Insights:**
-- 🟢 **Organic** earns 11.5x more revenue than CPC despite similar investment
-- 🟡 **Referral** has highest CVR at 1.89% — nearly 2x organic — scale partnerships
-- 🔴 **CPC** underperforms at 0.98% CVR — reallocate budget immediately
-""")
-
-st.markdown("---")
-
-# SECTION 5: PRODUCT & AUDIENCE INSIGHTS (KPIs 7 & 8)
-st.markdown('<div class="section-header">🎁 PRODUCT & AUDIENCE INSIGHTS (KPIs 7 & 8)</div>', unsafe_allow_html=True)
-
-product_data = df[df['category'] == 'PRODUCT']
-device_data = df[df['category'] == 'DEVICE']
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    top5_pct = product_data[product_data['metric_name'] == 'Top Product Revenue Concentration']['value'].values[0]
-    st.metric("Top 5 SKU Concentration", f"{top5_pct:.1f}%", "Well below 60% threshold ✓ Healthy")
-
-with col2:
-    desktop_gap = device_data[device_data['metric_name'] == 'Device Conversion Gap'].iloc[2]['value']
-    st.metric("Desktop Gap", f"{desktop_gap:.1f} ppts", "Neutral (-1.3)")
-
-with col3:
-    mobile_gap = device_data[device_data['metric_name'] == 'Device Conversion Gap'].iloc[4]['value']
-    st.metric("Mobile Gap", f"{mobile_gap:.1f} ppts", "Strength (+1.4 over-indexes)")
-
-# Product and Device tables
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Top 5 Products by Revenue")
-    products = ['Google Zip Hoodie F/C', 'Google Crewneck Sweatshirt N', "Google Men's Tech Fleece",
-                'Google Badge Heavyweight', 'Super G Unisex Joggers']
-    pcts = [3.8, 3.0, 2.7, 2.7, 2.6]
-    product_df = pd.DataFrame({'Product': products, 'Revenue Share': [f'{p}%' for p in pcts]})
-    st.dataframe(product_df, use_container_width=True, hide_index=True)
-
-with col2:
-    st.subheader("Device: Traffic vs Purchase Distribution")
-    devices = ['Desktop', 'Mobile', 'Tablet']
-    traffic_pcts = [57.9, 39.8, 2.3]
-    purchase_pcts = [56.6, 41.2, 2.2]
-    gaps = [-1.3, 1.4, -0.1]
-    device_df = pd.DataFrame({
-        'Device': devices,
-        'Traffic %': traffic_pcts,
-        'Purchase %': purchase_pcts,
-        'Gap (ppts)': gaps
-    })
-    st.dataframe(device_df, use_container_width=True, hide_index=True)
-
-st.markdown("""
-**Key Findings:**
-- ✅ **No concentration risk:** Top 5 SKUs = only 14.8% of revenue. Portfolio is resilient.
-- 💪 **Mobile strength:** Mobile over-indexes on purchases (+1.4 ppts) — rare advantage. No UX fix needed.
-- 📱 **Desktop baseline:** 57.9% traffic → 56.6% purchases. Proportional conversion.
-""")
-
-st.markdown("---")
-
-# SECTION 6: ACTION TRIGGERS & RECOMMENDATIONS
-st.markdown('<div class="section-header">⚡ ACTION TRIGGERS & RECOMMENDATIONS</div>', unsafe_allow_html=True)
-
-action_data = df[df['category'] == 'ACTION_TRIGGERS']
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("""
-    ### 🔴 CRITICAL - Fix Homepage Navigation
-    **Impact:** 77.1% of 267,116 sessions never view a product = 205,864 lost visitors
-
-    **Issue:** Largest volume leak in funnel
-
-    **Action:** Route to UX + Product team
-    - Audit homepage layout and navigation structure
-    - Review primary CTAs and product routing
-    - Test alternative navigation flows
-
-    **ROI:** Even improving to 30% view rate = ~19,000 additional product viewers
-    """)
-
-    st.markdown("""
-    ### 🔴 CRITICAL - Audit Checkout Flow
-    **Impact:** 54.51% abandonment = 5,296 high-intent users lost
-
-    **Issue:** Above 50% threshold
-
-    **Recovery Potential:** ~$43,083 (10% recovery × AOV)
-
-    **Action:** Route to UX + Dev team
-    - Review payment options and form length
-    - Improve trust signals and security badges
-    - Optimize mobile checkout
-    """)
-
-with col2:
-    st.markdown("""
-    ### 🟡 HIGH PRIORITY - Reallocate CPC Budget
-    **Issue:** CPC CVR at 0.98% (below 1% threshold)
-
-    **Data:** 15,450 sessions, only 152 buyers, $9,056 revenue
-
-    **Comparison:** Organic earns 11.5x more than CPC
-
-    **Action:** Route to Performance Marketing team
-    - Reduce CPC spend immediately
-    - Increase referral partnerships (1.89% CVR)
-    - Reallocate freed budget to high-ROI channels
-    """)
-
-    st.markdown("""
-    ### 🟠 MONITOR - Protect December AOV
-    **Issue:** AOV dropped 39% Nov→Dec ($115 → $69)
-
-    **Risk:** Each Dec order worth $45 less than Nov
-
-    **Revenue at Risk:** 2,311 Dec orders × $45 = $103,995 if trend continues
-
-    **Action:** Route to Merchandising + CRM
-    - Introduce bundle promotions in early November
-    - Minimum-basket free shipping threshold
-    - Protect basket size during peak season
-    """)
+actions_df = pd.DataFrame(actions_data)
+st.dataframe(actions_df, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
 # Footer
-col1, col2, col3 = st.columns(3)
-with col2:
-    st.markdown("""
-    <div style='text-align: center; color: #666; font-size: 12px;'>
-    <p>GA4 E-Commerce Dashboard | Nov 2020 – Jan 2021 (92 days)</p>
-    <p>Data: bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*</p>
-    <p>Last Updated: """ + datetime.now().strftime('%B %d, %Y') + """</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align: center; color: #999; font-size: 12px; margin-top: 30px;">
+<strong>Data Period:</strong> Nov 2020 – Jan 2021 (92 days) |
+<strong>Source:</strong> GA4 E-Commerce Sample Dataset |
+<strong>Last Updated:</strong> """ + datetime.now().strftime("%B %d, %Y") + """
+</div>
+""", unsafe_allow_html=True)
