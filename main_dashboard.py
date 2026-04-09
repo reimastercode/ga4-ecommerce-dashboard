@@ -12,45 +12,61 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Custom CSS for styling - Vibrant colors & compact layout
 st.markdown("""
     <style>
+    /* Reduce overall spacing */
+    .css-1y0tads { margin-bottom: 0.5rem !important; }
+
     .metric-card {
-        background: linear-gradient(135deg, #1f77b4 0%, #0d47a1 100%);
+        background: linear-gradient(135deg, #0052CC 0%, #003D99 100%);
         color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
     }
     .section-header {
-        background: linear-gradient(90deg, #1f77b4 0%, #2ca02c 100%);
+        background: linear-gradient(90deg, #0052CC 0%, #00AA44 100%);
         color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin: 20px 0 15px 0;
-        font-size: 18px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin: 8px 0 10px 0;
+        font-size: 16px;
         font-weight: bold;
     }
     .alert-box {
-        background-color: #ffebee;
-        border-left: 4px solid #d32f2f;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
+        background-color: #FF3333;
+        border-left: 4px solid #CC0000;
+        padding: 10px 12px;
+        border-radius: 4px;
+        margin: 6px 0;
+        color: white;
+        font-weight: 500;
+        font-size: 13px;
     }
     .success-box {
-        background-color: #e8f5e9;
-        border-left: 4px solid #388e3c;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
+        background-color: #00DD55;
+        border-left: 4px solid #00AA33;
+        padding: 10px 12px;
+        border-radius: 4px;
+        margin: 6px 0;
+        color: #003300;
+        font-weight: 500;
+        font-size: 13px;
     }
     .warning-box {
-        background-color: #fff3e0;
-        border-left: 4px solid #f57c00;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
+        background-color: #FFAA00;
+        border-left: 4px solid #FF8800;
+        padding: 10px 12px;
+        border-radius: 4px;
+        margin: 6px 0;
+        color: #333;
+        font-weight: 500;
+        font-size: 13px;
+    }
+    /* Compress spacing on metrics */
+    [data-testid="metric-container"] {
+        margin: 2px 0 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -119,19 +135,19 @@ device_data = {
 # DASHBOARD TITLE & OVERVIEW
 # ============================================================================
 
-st.title("📊 GA4 E-Commerce Dashboard")
-st.markdown("**CMO Data View** | Google Merchandise Store | Nov 2020 – Jan 2021 (92 days)")
-st.markdown("---")
+st.title("📊 GA4 Dashboard")
+st.markdown("**CMO View** | Google Merchandise Store | Nov 2020 – Jan 2021")
+st.markdown("<style>hr { margin: 0.5rem 0; }</style>---", unsafe_allow_html=True)
 
 # Critical alerts
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown('<div class="alert-box"><strong>🚨 CRITICAL:</strong> Only 22.9% of 267K sessions view a product — 205,864 users lost before product page.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="alert-box">🚨 77% sessions never view product — 205,864 users lost</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<div class="alert-box"><strong>⚠️ ACTION NEEDED:</strong> 54.5% checkout abandonment = $43K revenue recovery potential.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="alert-box">⚠️ 54.5% checkout abandonment = $43K recovery potential</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<style>hr { margin: 0.3rem 0; }</style>---", unsafe_allow_html=True)
 
 # ============================================================================
 # SECTION 1: REVENUE & TRANSACTION PERFORMANCE
@@ -176,7 +192,8 @@ with chart_col1:
         xaxis_title="Month",
         hovermode='x unified',
         showlegend=False,
-        height=400
+        height=280,
+        margin=dict(l=50, r=50, t=40, b=40)
     )
     st.plotly_chart(fig_revenue, use_container_width=True)
 
@@ -201,16 +218,14 @@ with chart_col2:
         xaxis_title="Month",
         hovermode='x unified',
         showlegend=False,
-        height=400
+        height=280,
+        margin=dict(l=50, r=50, t=40, b=40)
     )
     st.plotly_chart(fig_aov, use_container_width=True)
 
-st.markdown("""
-**Insight:** December brought peak volume (+83% orders vs November) but at the cost of 39% lower AOV. November customers spend 65% more per order.
-**Action:** Bundle promotions in early November to protect December AOV from seasonal deflation.
-""")
+st.markdown("**Insight:** Dec volume +83% but AOV -39% vs Nov. Bundle promos needed to protect basket size.", unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<style>hr { margin: 0.3rem 0; }</style>---", unsafe_allow_html=True)
 
 # ============================================================================
 # SECTION 2: FUNNEL & CONVERSION EFFICIENCY
@@ -242,7 +257,8 @@ fig_funnel = go.Figure(go.Funnel(
 ))
 fig_funnel.update_layout(
     title="User Funnel: Session Start → Purchase",
-    height=400
+    height=300,
+    margin=dict(l=50, r=50, t=40, b=40)
 )
 st.plotly_chart(fig_funnel, use_container_width=True)
 
@@ -256,11 +272,10 @@ funnel_df = pd.DataFrame({
 st.dataframe(funnel_df, use_container_width=True, hide_index=True)
 
 st.markdown("""
-**Critical Finding:** 205,864 visitors never see a product (77% drop-off at View Item stage). This is the largest absolute loss point.
-**Action:** Route to UX/Product team — audit homepage navigation and landing page routing immediately.
+**Critical Finding:** 205,864 visitors never see a product (77% drop-off). **Action:** Audit homepage navigation immediately.
 """)
 
-st.markdown("---")
+st.markdown("<style>hr { margin: 0.3rem 0; }</style>---", unsafe_allow_html=True)
 
 # ============================================================================
 # SECTION 3: TRAFFIC SOURCE QUALITY
@@ -271,7 +286,7 @@ st.markdown('<div class="section-header">🚀 Traffic Source Quality</div>', uns
 # Revenue by channel
 channels = list(traffic_by_channel.keys())
 revenues_channel = [traffic_by_channel[c]['revenue'] for c in channels]
-colors_map = {'Organic': '#2ca02c', 'Referral': '#1f77b4', 'CPC': '#d32f2f'}
+colors_map = {'Organic': '#00CC44', 'Referral': '#0052CC', 'CPC': '#FF3333'}
 colors = [colors_map[c] for c in channels]
 
 fig_revenue_channel = go.Figure(go.Bar(
@@ -287,7 +302,8 @@ fig_revenue_channel.update_layout(
     xaxis_title="Revenue ($)",
     hovermode='y unified',
     showlegend=False,
-    height=300
+    height=200,
+    margin=dict(l=50, r=50, t=40, b=40)
 )
 st.plotly_chart(fig_revenue_channel, use_container_width=True)
 
@@ -311,7 +327,7 @@ st.markdown("""
 **Action:** Reallocate CPC budget to referral partner development. Each 1% CVR improvement at current volume = ~$11,441 additional revenue.
 """)
 
-st.markdown("---")
+st.markdown("<style>hr { margin: 0.3rem 0; }</style>---", unsafe_allow_html=True)
 
 # ============================================================================
 # SECTION 4: PRODUCT & AUDIENCE INSIGHTS
@@ -338,15 +354,16 @@ fig_products = go.Figure(go.Bar(
     y=[p['name'] for p in product_data],
     x=[p['revenue'] for p in product_data],
     orientation='h',
-    marker=dict(color='#9467bd'),
-    text=[f"${p['revenue']:,.0f}<br>{p['units']} units" for p in product_data],
+    marker=dict(color='#AA00CC'),
+    text=[f"${p['revenue']:,.0f}" for p in product_data],
     textposition='outside',
 ))
 fig_products.update_layout(
     title="Top 5 Products by Revenue",
     xaxis_title="Revenue ($)",
     showlegend=False,
-    height=300
+    height=250,
+    margin=dict(l=50, r=50, t=40, b=40)
 )
 st.plotly_chart(fig_products, use_container_width=True)
 
@@ -371,7 +388,7 @@ st.markdown("""
 **Recommendation:** Current UX satisfies both desktop and mobile users — maintain without major changes.
 """)
 
-st.markdown("---")
+st.markdown("<style>hr { margin: 0.3rem 0; }</style>---", unsafe_allow_html=True)
 
 # ============================================================================
 # ACTION SUMMARY
@@ -413,9 +430,7 @@ st.markdown("---")
 
 # Footer
 st.markdown("""
-<div style="text-align: center; color: #999; font-size: 12px; margin-top: 30px;">
-<strong>Data Period:</strong> Nov 2020 – Jan 2021 (92 days) |
-<strong>Source:</strong> GA4 E-Commerce Sample Dataset |
-<strong>Last Updated:</strong> """ + datetime.now().strftime("%B %d, %Y") + """
+<div style="text-align: center; color: #999; font-size: 11px; margin-top: 10px;">
+Data: Nov 2020–Jan 2021 | Source: GA4 E-Commerce | Updated: """ + datetime.now().strftime("%b %d, %Y") + """
 </div>
 """, unsafe_allow_html=True)
